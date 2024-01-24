@@ -15,23 +15,26 @@ from einops import rearrange
 # from utils.hparams import hparams
 
 
-
-#设置一些超参数
-parser = argparse.ArgumentParser("DiffBeautifier")
-parser.add_argument('--max_beta', type=int, default=0.06)
+# 设置一些超参数
+parser = argparse.ArgumentParser("ConTuner")
+parser.add_argument("--max_beta", type=int, default=0.06)
 args = parser.parse_args()
 
+
 def vpsde_beta_t(t, T, min_beta, max_beta):
-    t_coef = (2 * t - 1) / (T ** 2)
-    return 1. - np.exp(-min_beta / T - 0.5 * (max_beta - min_beta) * t_coef)
+    t_coef = (2 * t - 1) / (T**2)
+    return 1.0 - np.exp(-min_beta / T - 0.5 * (max_beta - min_beta) * t_coef)
+
 
 def _logsnr_schedule_cosine(t, *, logsnr_min, logsnr_max):
-  b = np.arctan(np.exp(-0.5 * logsnr_max))
-  a = np.arctan(np.exp(-0.5 * logsnr_min)) - b
-  return -2. * np.log(np.tan(a * t + b))
+    b = np.arctan(np.exp(-0.5 * logsnr_max))
+    a = np.arctan(np.exp(-0.5 * logsnr_min)) - b
+    return -2.0 * np.log(np.tan(a * t + b))
 
 
-def get_noise_schedule_list(schedule_mode, timesteps, min_beta=0.0, max_beta=0.01, s=0.008):
+def get_noise_schedule_list(
+    schedule_mode, timesteps, min_beta=0.0, max_beta=0.01, s=0.008
+):
     if schedule_mode == "linear":
         schedule_list = np.linspace(0.000001, 0.01, timesteps)
     elif schedule_mode == "cosine":
@@ -42,15 +45,26 @@ def get_noise_schedule_list(schedule_mode, timesteps, min_beta=0.0, max_beta=0.0
         betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
         schedule_list = np.clip(betas, a_min=0, a_max=0.999)
     elif schedule_mode == "vpsde":
-        schedule_list = np.array([
-            vpsde_beta_t(t, timesteps, min_beta, max_beta) for t in range(1, timesteps + 1)])
+        schedule_list = np.array(
+            [
+                vpsde_beta_t(t, timesteps, min_beta, max_beta)
+                for t in range(1, timesteps + 1)
+            ]
+        )
     elif schedule_mode == "logsnr":
         u = np.array([t for t in range(0, timesteps + 1)])
-        schedule_list = np.array([
-            _logsnr_schedule_cosine(t / timesteps, logsnr_min=-20.0, logsnr_max=20.0) for t in range(1, timesteps + 1)])
+        schedule_list = np.array(
+            [
+                _logsnr_schedule_cosine(
+                    t / timesteps, logsnr_min=-20.0, logsnr_max=20.0
+                )
+                for t in range(1, timesteps + 1)
+            ]
+        )
     else:
         raise NotImplementedError
     return schedule_list
+
 
 def exists(x):
     return x is not None
@@ -64,6 +78,7 @@ def default(val, d):
 
 # gaussian diffusion trainer class
 
+
 def extract(a, t, x_shape):
     b, *_ = t.shape
     out = a.gather(-1, t)
@@ -71,7 +86,9 @@ def extract(a, t, x_shape):
 
 
 def noise_like(shape, device, repeat=False):
-    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
+    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(
+        shape[0], *((1,) * (len(shape) - 1))
+    )
     noise = lambda: torch.randn(shape, device=device)
     return repeat_noise() if repeat else noise()
 
@@ -275,7 +292,7 @@ beta_schedule = {
 
 #     def cwt2f0_norm(self, cwt_spec, mean, std, mel2ph):
 #         return self.fs2.cwt2f0_norm(cwt_spec, mean, std, mel2ph)
-        
+
 #     def out2mel(self, x):
 #         return x
 
