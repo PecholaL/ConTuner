@@ -1,4 +1,6 @@
-# predict rhe pitch
+""" Predict Pitch
+"""
+
 import torch
 import argparse
 import logging
@@ -11,7 +13,6 @@ from net import PitchNet
 from getdata import *
 
 
-# 设置一些超参数
 parser = argparse.ArgumentParser("PitchPrediction")
 parser.add_argument(
     "--save",
@@ -19,23 +20,20 @@ parser.add_argument(
     default="/home/Coding/ConTuner/NlpVoice/ConTuner/result/pitchresult",
     help="experiment name",
 )
-# parser.add_argument('--output_ama', type=str, default='/home/Coding/ConTuner/NlpVoice/ConTuner/result/pitchresult')
+
 parser.add_argument("--epoch", type=int, default=200)
-# parser.add_argument('--trainepoch',type=int,default=10,help='moretrain')
 parser.add_argument("--datai", type=int, default=2)
 parser.add_argument("--dataj", type=int, default=4)
 parser.add_argument("--fs", type=int, default=22050)
 
 args = parser.parse_args()
 
-# 定义设备
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
 else:
     device = torch.device("cpu")
 
-# 日志，设置模式为追加
-log_format = "时间:%(asctime)s  日志信息:%(message)s"
+log_format = "time: %(asctime)s  log: %(message)s"
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO,
@@ -49,14 +47,11 @@ logging.getLogger().addHandler(fh)
 
 
 def main():
-    # 音高预测器的模型
     pitch_model = PitchNet()
     pitch_model = pitch_model.to(device)
 
-    ## 初始化损失函数
-    loss_f = torch.nn.L1Loss().to(device)  ## |X-Y| ## 可以换成 torch.nn.MSELoss()
+    loss_f = torch.nn.L1Loss().to(device)
 
-    ## 神经网络的参数优化器
     optim = torch.optim.Adam(
         pitch_model.parameters(),
         lr=5e-4,
@@ -65,7 +60,7 @@ def main():
         weight_decay=1e-8,
     )
 
-    # 模型训练，注意模型的输入要是float32,即Torch.Tensor(),最后还需要用.float()来控制
+    # input tensor type torch.float32
     for epochi in range(args.epoch):
         logging.info("*****当前是第%d次epoch*****", epochi)
         sumloss = 0  # 记录总的损失值

@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 
 
-out_path = r"/home/Coding/ConTuner/NlpVoice/Diffusionmel/result/tmp/001.wav"
+test_out_path = r"/home/Coding/ConTuner/NlpVoice/Diffusionmel/result/tmp/001.wav"
 
 
 def getsp(wav_path):
@@ -31,7 +31,7 @@ def getsp(wav_path):
     # synthesize original audio with the extracted components
     y_h = pw.synthesize(f0_h, sp_h, ap_h, fs, pw.default_frame_period)
     librosa.output.write_wav('result/y_harvest_with_f0_refinement.wav', y_h, fs)
-    sf.write(out_path, y_h, fs)
+    sf.write(test_out_path, y_h, fs)
     """
 
     f0_h = f0_h.astype(np.float)
