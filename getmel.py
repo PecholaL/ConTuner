@@ -164,13 +164,11 @@ def save_figure_to_numpy(fig):
 
 
 if __name__ == "__main__":
-    ## 给定一条语音
     # p = r'D:\语音数据\num_train\000909.wav'
     ji = r"/home/Coding/ConTuner/月亮之上2.wav"
     outputfile = r"/home/Coding/ConTuner/NlpVoice/ConTuner/result/cryresult/crytest.wav"
     aa, _ = get_spectrograms(ji)
 
-    # #画出原始语音
     # # Loading sound file
     # y, sr = librosa.load(p, sr=16000)
     # # Trimming
@@ -191,7 +189,6 @@ if __name__ == "__main__":
     # # plt.savefig("/home/Coding/ConTuner/NlpVoice/Diffusionmel/result/test1.png")
     # # plt.close()
 
-    # #进行mel谱的绘制
     # plt.figure(figsize=(16,8))
     # # kernel = np.ones((3,3),np.uint8)  ,
     # # mel_spect = cv2.morphologyEx(mel_spect, cv2.MORPH_OPEN, kernel)
@@ -213,7 +210,6 @@ if __name__ == "__main__":
     # # plt.savefig("/home/Coding/ConTuner/NlpVoice/Diffusionmel/result/test2.png")
     # # plt.close()
 
-    ## 将 melspec  合成为语音。并和原始语音做比较
     print(aa[0].shape)
     wav1 = melspectrogram2wav(aa.T)  # input size : (frames ,ndim)
     # print(wav1)
@@ -226,7 +222,6 @@ if __name__ == "__main__":
     soundfile.write(outputfile, wav1, 16000)
     print("finished change ")
 
-    # ###  画出 转化语音的谱
     # aa = get_spectrograms(p.replace('.w','_gff.w'))
     # plt.figure()
     # plt.title("mel2wav melspec")

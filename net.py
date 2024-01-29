@@ -10,8 +10,6 @@ from math import sqrt
 Linear = nn.Linear
 ConvTranspose2d = nn.ConvTranspose2d
 
-
-# 设置一些超参数
 parser = argparse.ArgumentParser("ConTuner")
 parser.add_argument("--hidden_size", type=int, default=80)
 parser.add_argument("--residual_layers", type=int, default=20)
@@ -20,8 +18,6 @@ parser.add_argument("--dilation_cycle_length", type=int, default=1)
 args = parser.parse_args()
 
 
-# 实现Mish激活函数
-# used as class:
 class Mish(nn.Module):
     def __init__(self):
         super().__init__()
@@ -31,7 +27,7 @@ class Mish(nn.Module):
 
 
 class AttrDict(dict):
-    def __init__(self, *args, **kwargs):  # 不确定变量个数的tube和dict
+    def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
@@ -61,7 +57,7 @@ class SinusoidalPosEmb(nn.Module):
         return emb
 
 
-# 对一维卷积做了一些初始化的工作
+# initialization for Conv1d
 def Conv1d(*args, **kwargs):
     layer = nn.Conv1d(*args, **kwargs)
     nn.init.kaiming_normal_(layer.weight)
@@ -73,7 +69,6 @@ def silu(x):
     return x * torch.sigmoid(x)
 
 
-# wavenet中间那块
 class ResidualBlock(nn.Module):
     def __init__(self, encoder_hidden, residual_channels, dilation):
         super().__init__()
@@ -99,9 +94,9 @@ class ResidualBlock(nn.Module):
 
         # print("y",y.shape)
         # print("***",self.dilated_conv(y).shape,"&&&",conditioner.shape)
-        y = self.dilated_conv(y) + conditioner  # 将三个部分糅合在一起
+        y = self.dilated_conv(y) + conditioner
 
-        gate, filter = torch.chunk(y, 2, dim=1)  # 在第一维上拆成两份
+        gate, filter = torch.chunk(y, 2, dim=1)
         y = torch.sigmoid(gate) * torch.tanh(filter)
 
         y = self.output_projection(y)
@@ -109,7 +104,7 @@ class ResidualBlock(nn.Module):
         return (x + residual) / sqrt(2.0), skip
 
 
-# 降噪器的整体结构
+# Denoiser
 class DiffNet(nn.Module):
     def __init__(self, in_dims=80):
         super().__init__()
@@ -118,14 +113,14 @@ class DiffNet(nn.Module):
             encoder_hidden=args.hidden_size,  # 256
             residual_layers=args.residual_layers,  # 20
             residual_channels=args.residual_channels,  # 256
-            dilation_cycle_length=args.dilation_cycle_length,  # 1，这个不知道干啥用的
+            dilation_cycle_length=args.dilation_cycle_length,  # 1
         )
-        self.input_projection = Conv1d(in_dims, params.residual_channels, 1)  # x做的卷积
-        self.diffusion_embedding = SinusoidalPosEmb(params.residual_channels)  # t做的位置编码
+        self.input_projection = Conv1d(in_dims, params.residual_channels, 1)
+        self.diffusion_embedding = SinusoidalPosEmb(params.residual_channels)
         dim = params.residual_channels
         self.mlp = nn.Sequential(
-            nn.Linear(dim, dim * 4), Mish(), nn.Linear(dim * 4, dim)  # Mish()是一个激活函数
-        )  # t做的前向连接
+            nn.Linear(dim, dim * 4), Mish(), nn.Linear(dim * 4, dim)
+        )
 
         self.residual_layers = nn.ModuleList(
             [
@@ -157,7 +152,7 @@ class DiffNet(nn.Module):
 
         diffusion_step = self.diffusion_embedding(
             diffusion_step
-        )  # 传入时间步数t，得到的diffusion_step维度为[B,1,params.residual_channels]
+        )  # diffusion_step shape [B,1,params.residual_channels]
         diffusion_step = self.mlp(diffusion_step)
 
         skip = []
@@ -169,11 +164,10 @@ class DiffNet(nn.Module):
         x = self.skip_projection(x)
         x = F.relu(x)
         x = self.output_projection(x)  # [B, 80, T]  六
-        return x[:, None, :, :]  # [B,1,80,T]由回到了最初的一个输入的x的维度
-        return x
+        return x[:, None, :, :]
 
 
-# 音高预测器的整体结构
+# Pitch Predictor
 class PitchNet(nn.Module):
     def __init__(self, in_dim=513, out_dim=256, kernel=5, n_layers=3, strides=None):
         super().__init__()
@@ -182,7 +176,7 @@ class PitchNet(nn.Module):
 
         self.in_linear = nn.Sequential(
             nn.Linear(1, 16),
-            Mish(),  # Mish()是一个激活函数
+            Mish(),
             nn.Linear(16, 64),
             Mish(),
             nn.Linear(64, 256),
@@ -204,7 +198,6 @@ class PitchNet(nn.Module):
                         stride=self.strides[l],
                     ),
                     nn.ReLU(),
-                    # nn.Dropout(0.01),
                     nn.BatchNorm1d(out_dim),
                 )
             )
@@ -213,7 +206,7 @@ class PitchNet(nn.Module):
 
         self.mlp = nn.Sequential(
             nn.Linear(out_dim, out_dim // 4),
-            Mish(),  # Mish()是一个激活函数
+            Mish(),
             nn.Linear(out_dim // 4, out_dim // 16),
             Mish(),
             nn.Linear(out_dim // 16, out_dim // 64),
@@ -226,7 +219,7 @@ class PitchNet(nn.Module):
         """
         sp_h:[B,M,513]
         midi:[B,M,1]
-        output:[B,M,]  一维向量
+        output:[B,M,]
         """
         # print("&&&&&",sp_h.shape)
 
@@ -257,7 +250,7 @@ class PitchNet(nn.Module):
         #     tmp2=tmp1+sp_h
         #     sp_h=tmp2
 
-        x = torch.cat([midi, sp_h], dim=1)  # 进行拼接
+        x = torch.cat([midi, sp_h], dim=1)
 
         x = sp_h.transpose(1, 2)
 
@@ -281,14 +274,14 @@ class DiffNetCon(nn.Module):
             encoder_hidden=args.hidden_size,  # 256
             residual_layers=args.residual_layers,  # 20
             residual_channels=args.residual_channels,  # 256
-            dilation_cycle_length=args.dilation_cycle_length,  # 1，这个不知道干啥用的
+            dilation_cycle_length=args.dilation_cycle_length,  # 1
         )
-        self.input_projection = Conv1d(in_dims, params.residual_channels, 1)  # x做的卷积
-        self.diffusion_embedding = SinusoidalPosEmb(params.residual_channels)  # t做的位置编码
+        self.input_projection = Conv1d(in_dims, params.residual_channels, 1)
+        self.diffusion_embedding = SinusoidalPosEmb(params.residual_channels)
         dim = params.residual_channels
         self.mlp = nn.Sequential(
-            nn.Linear(dim, dim * 4), Mish(), nn.Linear(dim * 4, dim)  # Mish()是一个激活函数
-        )  # t做的前向连接
+            nn.Linear(dim, dim * 4), Mish(), nn.Linear(dim * 4, dim)
+        )
 
         self.residual_layers = nn.ModuleList(
             [
@@ -311,7 +304,7 @@ class DiffNetCon(nn.Module):
 
         :param spec: [B, 1, M, T]
         :param diffusion_step: [B, 1]
-        :param cond: [B, M, 750]->经过长度规整器之后变成[B, M, T]
+        :param cond: [B, M, 750]->[B, M, T]
         :return:
         """
 
@@ -321,12 +314,9 @@ class DiffNetCon(nn.Module):
         x = self.input_projection(x)  # x [B, residual_channel, T]
         x = F.relu(x)
 
-        diffusion_step = self.diffusion_embedding(
-            diffusion_step
-        )  # 传入时间步数t，得到的diffusion_step维度为[B,1,params.residual_channels]
+        diffusion_step = self.diffusion_embedding(diffusion_step)
         diffusion_step = self.mlp(diffusion_step)
 
-        # 进行con的长度规整
         expand_factor = mel_len // 750
 
         regulator = Length_Regulator(expand_factor)
@@ -347,26 +337,21 @@ class DiffNetCon(nn.Module):
         x = torch.sum(torch.stack(skip), dim=0) / sqrt(len(self.residual_layers))
         x = self.skip_projection(x)
         x = F.relu(x)
-        x = self.output_projection(x)  # [B, 80, T]  六
-        return x[:, None, :, :]  # [B,1,80,T]由回到了最初的一个输入的x的维度
+        x = self.output_projection(x)
+        return x[:, None, :, :]
         return x
 
 
 class Length_Regulator(nn.Module):
     def __init__(self, expand_factor):
-        """
-        Length_Regulator 简单扩充
-        输入 文本编码 [B,Text_len,D],mel_len
-        输出 melspec 编码 【B，mel_len,D】
-        """
+        """Length_Regulator"""
         super().__init__()
-        # 下面这个变量记录每个文字要扩充的melspec长度。
         self.expand_factor = expand_factor
 
     def forward(self, text_memory, mel_len):
         """
-        这里这个函数比较特殊，我们根据一个固定的数值来进行 expand !
-        而不是像 fastspeech2那样，根据一个数组（predicted duration）来进行 扩充！
+        这里这个函数比较特殊，我们根据一个固定的数值来进行 expand!
+        而不是像 fastspeech2那样,根据一个数组(predicted duration)来进行扩充！
         :param text_memory: [B,Text_len,D]
         :param mel_len: a number,target mel len
         :return:  [B,mel len ,D]
