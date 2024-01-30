@@ -350,37 +350,26 @@ class Length_Regulator(nn.Module):
 
     def forward(self, text_memory, mel_len):
         """
-        这里这个函数比较特殊，我们根据一个固定的数值来进行 expand!
-        而不是像 fastspeech2那样,根据一个数组(predicted duration)来进行扩充！
-        :param text_memory: [B,Text_len,D]
-        :param mel_len: a number,target mel len
-        :return:  [B,mel len ,D]
+        param text_memory: [B,Text_len,D]
+        param mel_len: a number,target mel len
+        return:  [B,mel len ,D]
         """
 
-        ## 把 text_memory 中的 text len 直接倍数 扩增到 mel len!
-
         mel_chunks = []
-        text_len = text_memory.shape[1]  ## "七百八十九 = 5
+        text_len = text_memory.shape[1]
         for t in range(text_len):
-            ## 取出第 t 个时间步的 文本向量，并重复factor个时间步
             t_vec = text_memory[:, t, :].unsqueeze(1)  ## [B,1,D]
-            ## 将 t_vec  重复 self.expand_factor 次
             t_vec = t_vec.repeat(
                 1, self.expand_factor, 1
             )  ## [B,1,D] --->[B,self.expand_factor,D]
-            ## 此时 可以认为第t个文本已经扩充到了 其对应的 melspec的长度。
             mel_chunks.append(t_vec)
 
-        ## 下面 的代码，是一个输出长度的修正。
         ## [B,self.expand_factor * text len,D] --->[B,melspec len,512]
 
-        ## 在时间维度上，拼接所有时间帧
         mel_chunks = torch.cat(mel_chunks, dim=1)
         B, cat_mel_len, D = mel_chunks.shape
-        ## 确认其长度与给定的目标melspec一致
-        ##
+
         if cat_mel_len < mel_len:
-            ## 此时 需要padding,拼接一个 全零张量
             pad_t = torch.zeros(
                 (B, mel_len - cat_mel_len, D), device=text_memory.device
             )
