@@ -301,7 +301,6 @@ class DiffNetCon(nn.Module):
 
     def forward(self, spec, diffusion_step, cond):
         """
-
         :param spec: [B, 1, M, T]
         :param diffusion_step: [B, 1]
         :param cond: [B, M, 750]->[B, M, T]
