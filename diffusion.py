@@ -1,4 +1,4 @@
-""" Diffuesion
+""" Diffusion
 """
 import argparse
 from functools import partial

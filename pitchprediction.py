@@ -177,9 +177,7 @@ def main():
                         promidi_trans = promidi_trans.float().to(device)
 
                         pref0 = pitch_model(amasp_trans, promidi_trans)
-
                         pref0 = pref0.detach().cpu().reshape(pref0.shape[1]).numpy()
-
                         pref0 = pref0.astype(np.double)
 
                         out_path = (

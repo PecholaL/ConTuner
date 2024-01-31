@@ -16,13 +16,10 @@ def getsp(wav_path):
 
     # extract fundamental frequency
     _f0_h, t_h = pw.dio(x, fs)
-
     # modify f0
     f0_h = pw.stonemask(x, _f0_h, t_h, fs)
-
     # extract spectral envelope
     sp_h = pw.cheaptrick(x, f0_h, t_h, fs)
-
     # extract aperiodic parameter
     ap_h = pw.d4c(x, f0_h, t_h, fs)
 

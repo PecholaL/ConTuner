@@ -1,3 +1,6 @@
+""" Condition
+"""
+
 from net import *
 from getmel import *
 from diffusion import GaussianDiffusion
@@ -318,7 +321,6 @@ def main():
                         )
                         soundfile.write(outputfile, wav1, args.fs)
                         # print("finished change ")
-
     pass
 
 
