@@ -1,6 +1,8 @@
+""" Transformations among {Mel-spectrogram, spectrogram, waveform}
+"""
+
 import librosa
 import librosa.display
-import soundfile
 import numpy as np
 from matplotlib import pyplot as plt
 import scipy.signal as signal
@@ -161,74 +163,3 @@ def save_figure_to_numpy(fig):
     data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep="")
     data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return data
-
-
-if __name__ == "__main__":
-    # p = r'D:\语音数据\num_train\000909.wav'
-    ji = r"/home/Coding/ConTuner/月亮之上2.wav"
-    outputfile = r"/home/Coding/ConTuner/NlpVoice/ConTuner/result/cryresult/crytest.wav"
-    aa, _ = get_spectrograms(ji)
-
-    # # Loading sound file
-    # y, sr = librosa.load(p, sr=16000)
-    # # Trimming
-    # y, _ = librosa.effects.trim(y, top_db=top_db)
-    # plt.figure()
-    # plt.title("origin wavform")
-    # plt.plot(y)
-    # plt.show()
-
-    # aa = get_spectrograms(p)
-    # print(np.array(aa).shape)
-    # print("melspec size: {} , stft spec size:{}".format(aa[0].shape,aa[1].shape))
-    # # size : (frames, ndim)
-    # # plt.figure()
-    # # plt.title("oringin melspec")
-    # # plt.imshow(aa[0],cmap='Greens')
-    # # plt.show()
-    # # plt.savefig("/home/Coding/ConTuner/NlpVoice/Diffusionmel/result/test1.png")
-    # # plt.close()
-
-    # plt.figure(figsize=(16,8))
-    # # kernel = np.ones((3,3),np.uint8)  ,
-    # # mel_spect = cv2.morphologyEx(mel_spect, cv2.MORPH_OPEN, kernel)
-
-    print(aa.shape)
-
-    # librosa.display.TimeFormatter(lag=True)
-    # mel_img=librosa.display.specshow(aa[0], y_axis='mel', x_axis='s')#, fmax=8000
-
-    # plt.title(f'Mel-Spectrogram-jsptestforward')
-    # plt.colorbar(mel_img,format='%+2.0f dB')
-    # plt.savefig("/home/Coding/ConTuner/NlpVoice/Diffusionmel/result/short/image1.png")
-    # plt.close()
-
-    # # plt.figure()
-    # # plt.title("oringin stft mag")
-    # # plt.imshow(aa[1],cmap='Greens')
-    # # plt.show()
-    # # plt.savefig("/home/Coding/ConTuner/NlpVoice/Diffusionmel/result/test2.png")
-    # # plt.close()
-
-    print(aa[0].shape)
-    wav1 = melspectrogram2wav(aa.T)  # input size : (frames ,ndim)
-    # print(wav1)
-    # plt.figure()
-    # plt.title("mel2wav: wavform")
-    # plt.plot(wav1)
-    # plt.show()
-
-    # soundfile.write(p.replace('.w','_gff.w'), wav1, sr)
-    soundfile.write(outputfile, wav1, 16000)
-    print("finished change ")
-
-    # aa = get_spectrograms(p.replace('.w','_gff.w'))
-    # plt.figure()
-    # plt.title("mel2wav melspec")
-    # plt.imshow(aa[0], cmap='Greens')
-    # plt.show()
-
-    # plt.figure()
-    # plt.title("mel2wav stft mag")
-    # plt.imshow(aa[1], cmap='Greens')
-    # plt.show()
