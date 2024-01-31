@@ -10,7 +10,6 @@ import soundfile
 import os
 from tqdm import tqdm
 
-
 parser = argparse.ArgumentParser("ConTuner")
 parser.add_argument(
     "--save",
