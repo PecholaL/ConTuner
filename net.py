@@ -338,7 +338,6 @@ class DiffNetCon(nn.Module):
         x = F.relu(x)
         x = self.output_projection(x)
         return x[:, None, :, :]
-        return x
 
 
 class Length_Regulator(nn.Module):
