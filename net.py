@@ -140,7 +140,6 @@ class DiffNet(nn.Module):
 
     def forward(self, spec, diffusion_step, cond):
         """
-
         :param spec: [B, 1, M, T]
         :param diffusion_step: [B, 1]
         :param cond: [B, M, T]
@@ -221,49 +220,28 @@ class PitchNet(nn.Module):
         midi:[B,M,1]
         output:[B,M,]
         """
-        # print("&&&&&",sp_h.shape)
-
-        # print(sp_h.shape,midi.shape)
-
-        # height1=sp_h.shape[1]
-        # weight=sp_h.shape[2]
-        # height2=midi.shape[1]
-
-        # print("******",midi.dtype)
-
         midi = self.in_linear(midi)  # [B,n,513]
-
-        # print("&&&&&&")
-
-        # for i in range()
-
-        # print("&&&&&&",sp_h)
-
-        # for i in range(midi.shape[0]):
-
-        #     tmp=midi[:,i,:]
-
-        #     # print("*****",tmp)
-
-        #     tmp=tmp.reshape(tmp.shape[0],1,tmp.shape[1])
-        #     tmp1=tmp*0.1
-        #     tmp2=tmp1+sp_h
-        #     sp_h=tmp2
 
         x = torch.cat([midi, sp_h], dim=1)
 
         x = sp_h.transpose(1, 2)
 
-        for i, l in enumerate(self.layers):
+        for _, l in enumerate(self.layers):
             x = l(x)
 
         x = x.transpose(1, 2)
         x = self.mlp(x)
         x = x.reshape(x.shape[0], x.shape[1])
 
-        # print("*****",x.shape)
-
         return x
+
+
+class ExpressivenessEnhancer(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self):
+        pass
 
 
 class DiffNetCon(nn.Module):
@@ -317,19 +295,14 @@ class DiffNetCon(nn.Module):
         diffusion_step = self.mlp(diffusion_step)
 
         expand_factor = mel_len // 750
-
-        regulator = Length_Regulator(expand_factor)
+        regulator = LengthRegulator(expand_factor)
 
         cond = cond.transpose(1, 2)
-
         cond = regulator(cond, mel_len)
-
         cond = cond.transpose(1, 2)
-
-        # print("netcon",cond.shape)
 
         skip = []
-        for layer_id, layer in enumerate(self.residual_layers):
+        for _, layer in enumerate(self.residual_layers):
             x, skip_connection = layer(x, cond, diffusion_step)
             skip.append(skip_connection)
 
@@ -340,7 +313,7 @@ class DiffNetCon(nn.Module):
         return x[:, None, :, :]
 
 
-class Length_Regulator(nn.Module):
+class LengthRegulator(nn.Module):
     def __init__(self, expand_factor):
         """Length_Regulator"""
         super().__init__()
