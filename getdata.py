@@ -2,12 +2,8 @@ from pitchcharacteristic import *
 
 
 def getdemo(i):
-    # if(i<=4):
     wavpath = "/home/Coding/ConTunerData/demo/song/" + str(i) + ".wav"
     return wavpath
-    # else:
-    #     wavpath="/home/Coding/ConTunerData/demo/song/"+str(i-4)+"pro.wav"
-    #     return wavpath
 
 
 # amateur
@@ -100,15 +96,11 @@ def get_propredictor(i):
 
 def get_amapredictor(i):
     wav = "/home/Coding/ConTuner/pitchjj/" + str(i) + ".wav"
-
     return getsp(wav)
 
 
 def get_midipredictor(i):
     wav_a = "/home/Coding/ConTuner/pitchjj/" + str(i) + ".csv"
-
     wav_a1 = "/home/Coding/ConTuner/pitchjj/" + str(i) + ".wav"
-
     wav_a = getMIDI(wav_a, wav_a1)
-
     return wav_a

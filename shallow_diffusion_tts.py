@@ -15,7 +15,6 @@ from einops import rearrange
 # from utils.hparams import hparams
 
 
-# 设置一些超参数
 parser = argparse.ArgumentParser("ConTuner")
 parser.add_argument("--max_beta", type=int, default=0.06)
 args = parser.parse_args()
