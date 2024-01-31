@@ -1,5 +1,5 @@
-import math
-import random
+""" Diffuesion
+"""
 import argparse
 from functools import partial
 from inspect import isfunction
@@ -9,10 +9,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from tqdm import tqdm
-from einops import rearrange
 
 
-# 设置一些超参数
 parser = argparse.ArgumentParser("ConTuner")
 parser.add_argument("--schedule_type", type=str, default="vpsde")
 parser.add_argument("--keep_bins", type=int, default=80)
@@ -57,8 +55,6 @@ class GaussianDiffusion(nn.Module):
     ):
         super().__init__()
         self.denoise_fn = denoise_fn
-        # self.fs2 = FastSpeech2(phone_encoder, out_dims)
-        # self.fs2.decoder = None
         self.mel_bins = out_dims
 
         if exists(betas):
@@ -74,9 +70,8 @@ class GaussianDiffusion(nn.Module):
                 min_beta=0.1,
                 max_beta=40,
                 s=0.008,
-            )  # 得到beta
+            )
 
-        # 得到扩散模型的一系列超参数
         alphas = 1.0 - betas
         alphas_cumprod = np.cumprod(alphas, axis=0)
         alphas_cumprod_prev = np.append(1.0, alphas_cumprod[:-1])
@@ -87,7 +82,6 @@ class GaussianDiffusion(nn.Module):
 
         to_torch = partial(torch.tensor, dtype=torch.float32)
 
-        # 模型的参数，没有梯度去更新
         self.register_buffer("timesteps", to_torch(self.num_timesteps))  # beta
         self.register_buffer("timescale", to_torch(self.time_scale))  # beta
         self.register_buffer("betas", to_torch(betas))  # beta
@@ -152,7 +146,7 @@ class GaussianDiffusion(nn.Module):
             - extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * noise
         )
 
-    # 逆采样中间函数的中间函数
+    # for inverse
     def q_posterior(self, x_start, x_t, t):
         posterior_mean = (
             extract(self.posterior_mean_coef1, t, x_t.shape) * x_start
@@ -164,7 +158,7 @@ class GaussianDiffusion(nn.Module):
         )
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    # 逆采样的中间函数
+    # for inverse
     def q_posterior_sample(self, x_start, x_t, t, repeat_noise=False):
         b, *_, device = *x_start.shape, x_start.device
         model_mean, _, model_log_variance = self.q_posterior(
@@ -177,14 +171,14 @@ class GaussianDiffusion(nn.Module):
         )
         return model_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise
 
-    # 逆采样
+    # inverse
     @torch.no_grad()
     def p_sample(
         self, x_t, t, cond, spk_emb=None, clip_denoised=True, repeat_noise=False
-    ):  # 这里的t是一个数
+    ):
         # t=t.reshape(-1,1)
         b, *_, device = *x_t.shape, x_t.device
-        x_0_pred = self.denoise_fn(x_t, t.reshape(-1, 1), cond)  # 放进模型跑出一个结果
+        x_0_pred = self.denoise_fn(x_t, t.reshape(-1, 1), cond)
 
         return self.q_posterior_sample(x_start=x_0_pred, x_t=x_t, t=t)
 
@@ -208,7 +202,7 @@ class GaussianDiffusion(nn.Module):
         x = x[:, 0].transpose(1, 2)
         return self.denorm_spec(x)
 
-    # 正向扩散
+    # diffusion
     def q_sample(self, x_start, t, noise=None):
         noise = default(noise, lambda: torch.randn_like(x_start))
 
@@ -227,7 +221,7 @@ class GaussianDiffusion(nn.Module):
             )
         return trace
 
-    # 扩散
+    # diffusion
     def diffuse_fn(self, x_start, t, noise=None):
         x_start = self.norm_spec(x_start)
         x_start = x_start.transpose(1, 2)[:, None, :, :]  # [B, 1, M, T]
@@ -273,7 +267,7 @@ class GaussianDiffusion(nn.Module):
 
             ret["mel_out"] = x_0_pred[:, 0].transpose(1, 2)  # [B, T, 80]
         else:
-            t = self.num_timesteps  # reverse总步数
+            t = self.num_timesteps  # reverse steps
             shape = (cond.shape[0], 1, self.mel_bins, cond.shape[2])
             x = torch.randn(shape, device=device)  # noise
             for i in tqdm(
@@ -283,7 +277,7 @@ class GaussianDiffusion(nn.Module):
                     x, torch.full((b,), i, device=device, dtype=torch.long), cond
                 )  # x(mel), t, condition(phoneme)
             x = x[:, 0].transpose(1, 2)
-            ret["mel_out"] = self.denorm_spec(x)  # 去除norm
+            ret["mel_out"] = self.denorm_spec(x)
         return ret
 
     def norm_spec(self, x):
