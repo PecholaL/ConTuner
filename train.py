@@ -2,7 +2,6 @@ from net import DiffNet
 from getmel import *
 from diffusion import GaussianDiffusion
 
-
 import argparse
 import torch
 import logging
@@ -189,7 +188,6 @@ def main():
                 + ".wav"
             )
             soundfile.write(outputfile, wav1, sr)
-
     pass
 
 
