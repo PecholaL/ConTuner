@@ -23,4 +23,4 @@ Bibtex: `come soon`
 
 or with a [hyperlink](https://github.com/PecholaL/ConTuner)  
 Markdown: `[ConTuner](https://github.com/PecholaL/ConTuner)`
-Latex: `\hyperlink{https://github.com/PecholaL/ConTuner}{\textsc{ConTuner}}`
+Latex: `\href{https://github.com/PecholaL/ConTuner}{\textsc{ConTuner}}`
