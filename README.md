@@ -22,5 +22,5 @@ If this repository helps your research, please cite it as,
 Bibtex: `come soon`  
 
 or with a [hyperlink](https://github.com/PecholaL/ConTuner)  
-Markdown: `[ConTuner](https://github.com/PecholaL/ConTuner)`
+Markdown: `[ConTuner](https://github.com/PecholaL/ConTuner)`  
 Latex: `\href{https://github.com/PecholaL/ConTuner}{\textsc{ConTuner}}`
