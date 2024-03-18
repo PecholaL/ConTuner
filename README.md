@@ -23,7 +23,7 @@ Bibtex:
 ```
 @inproceedings{wang2024contuner,
   title={CONTUNER: Singing Voice Beautifying with Pitch and Expressiveness Condition},
-  author={Wang, Jianzong and Li, Pengcheng and Zhang, Xulong and Zhang, Yong and Cheng, Ning andXiao, Jing},
+  author={Wang, Jianzong and Li, Pengcheng and Zhang, Xulong and Cheng, Ning andXiao, Jing},
   booktitle={2024 International Joint Conference on Neural Networks},
   pages={1--6},
   year={2024},
@@ -31,6 +31,6 @@ Bibtex:
 }
 ```   
 
-or with a [hyperlink](https://github.com/PecholaL/ConTuner)  
+or with a [hyperlink](https://github.com/PecholaL/ConTuner),  
 Markdown: `[ConTuner](https://github.com/PecholaL/ConTuner)`  
 Latex: `\href{https://github.com/PecholaL/ConTuner}{\textsc{ConTuner}}`
